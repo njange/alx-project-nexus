@@ -72,7 +72,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest -f docker/Dockerfile .
           docker push ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
 
       - name: Deploy to Server

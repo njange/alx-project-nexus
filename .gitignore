@@ -4,3 +4,5 @@ __pycache__/
 db.sqlite3
 .env.*
 /reco_engine/
+login.html
+signup.html

@@ -6,3 +6,6 @@ ERROR 2025-07-23 12:34:29,470 basehttp 135223 126607096280640 "GET /admin/ HTTP/
 INFO 2025-07-23 12:38:52,853 autoreload 137498 135341276876800 Watching for file changes with StatReloader
 INFO 2025-07-23 12:41:30,811 autoreload 137498 135341276876800 /home/njange/Projects/alx-project-nexus/app/settings.py changed, reloading.
 INFO 2025-07-23 12:41:32,982 autoreload 138278 126799605780480 Watching for file changes with StatReloader
+WARNING 2025-07-23 12:47:10,992 log 138278 126799430284864 Not Found: /
+WARNING 2025-07-23 12:47:10,994 basehttp 138278 126799430284864 "POST / HTTP/1.1" 404 2456
+INFO 2025-07-23 17:13:42,992 autoreload 7 126622618819456 Watching for file changes with StatReloader

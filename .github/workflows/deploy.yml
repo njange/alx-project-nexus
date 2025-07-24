@@ -86,5 +86,10 @@ jobs:
           docker pull ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
           docker stop nexus_app || true
           docker rm nexus_app || true
-          docker run -d --name nexus_app -p 8000:8000 --env-file /path/to/.env ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
+          docker run -d \
+            --name nexus_app \
+            -p 8000:8000 \
+            --env-file /home/ubuntu/nexus.env \
+            ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
+
           EOF

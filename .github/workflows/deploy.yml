@@ -74,12 +74,22 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest -f docker/Dockerfile .
           docker push ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
-
+    
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+                ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+                
       - name: Deploy to Server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
           docker pull ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
           docker stop nexus_app || true
           docker rm nexus_app || true
-          docker run -d --name nexus_app -p 8000:8000 --env-file /path/to/.env ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
+          docker run -d \
+            --name nexus_app \
+            -p 8000:8000 \
+            --env-file /home/ubuntu/nexus.env \
+            ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
+
           EOF

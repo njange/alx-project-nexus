@@ -10,23 +10,8 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build
     runs-on: ubuntu-22.04
-
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_DB: nexus_db
-          POSTGRES_USER: nexus_user
-          POSTGRES_PASSWORD: nexus_password
-        ports:
-          - 5433:5432
-        options: >-
-          --health-cmd="pg_isready -U nexus_user -d nexus_db"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - name: Checkout Code
@@ -47,6 +32,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+  test:
+    name: Test
+    runs-on: ubuntu-22.04
+    needs: build
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: nexus_db
+          POSTGRES_USER: nexus_user
+          POSTGRES_PASSWORD: nexus_password
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd="pg_isready -U nexus_user -d nexus_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
       - name: Run Tests
         env:
           DB_NAME: nexus_db
@@ -58,7 +67,7 @@ jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
 
     steps:
       - name: Checkout Code

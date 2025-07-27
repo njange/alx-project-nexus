@@ -1,0 +1,95 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-22.04
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: nexus_db
+          POSTGRES_USER: nexus_user
+          POSTGRES_PASSWORD: nexus_password
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd="pg_isready -U nexus_user -d nexus_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Python 3.12
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3.10 python3.10-venv python3.10-distutils
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Tests
+        env:
+          DB_NAME: nexus_db
+          DB_USER: nexus_user
+          DB_PASSWORD: nexus_password
+        run: |
+          python manage.py test
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest -f docker/Dockerfile .
+          docker push ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
+    
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+                ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+                
+      - name: Deploy to Server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          docker pull ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
+          docker stop nexus_app || true
+          docker rm nexus_app || true
+          docker run -d \
+            --name nexus_app \
+            -p 8000:8000 \
+            --env-file /home/ubuntu/nexus.env \
+            ${{ secrets.DOCKER_USERNAME }}/alx-project-nexus:latest
+
+          EOF
